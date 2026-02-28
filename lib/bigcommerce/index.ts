@@ -2,21 +2,29 @@ import { isVercelCommerceError } from 'lib/type-guards';
 import { notFound } from 'next/navigation';
 import { NextRequest, NextResponse } from 'next/server';
 import { BIGCOMMERCE_GRAPHQL_API_ENDPOINT } from './constants';
+import {
+    demoCollections,
+    demoFooterMenu,
+    demoHeaderMenu,
+    demoPages,
+    demoProducts,
+    emptyCart
+} from './demo-data';
 
 import {
-  bigCommerceToVercelCart,
-  bigCommerceToVercelCollection,
-  bigCommerceToVercelPageContent,
-  bigCommerceToVercelProduct,
-  bigCommerceToVercelProducts,
-  vercelFromBigCommerceLineItems,
-  vercelToBigCommerceSorting
+    bigCommerceToVercelCart,
+    bigCommerceToVercelCollection,
+    bigCommerceToVercelPageContent,
+    bigCommerceToVercelProduct,
+    bigCommerceToVercelProducts,
+    vercelFromBigCommerceLineItems,
+    vercelToBigCommerceSorting
 } from './mappers';
 import {
-  addCartLineItemMutation,
-  createCartMutation,
-  deleteCartLineItemMutation,
-  updateCartLineItemMutation
+    addCartLineItemMutation,
+    createCartMutation,
+    deleteCartLineItemMutation,
+    updateCartLineItemMutation
 } from './mutations/cart';
 import { getCartQuery } from './queries/cart';
 import { getCategoryQuery, getStoreCategoriesQuery } from './queries/category';
@@ -24,53 +32,62 @@ import { getCheckoutQuery } from './queries/checkout';
 import { getMenuQuery } from './queries/menu';
 import { getPageQuery, getPagesQuery } from './queries/page';
 import {
-  getFeaturedProductsQuery,
-  getNewestProductsQuery,
-  getProductQuery,
-  getProductsCollectionQuery,
-  getProductsRecommedationsQuery,
-  getStoreProductsQuery,
-  searchProductsQuery
+    getFeaturedProductsQuery,
+    getNewestProductsQuery,
+    getProductQuery,
+    getProductsCollectionQuery,
+    getProductsRecommedationsQuery,
+    getStoreProductsQuery,
+    searchProductsQuery
 } from './queries/product';
 import { getEntityIdByRouteQuery } from './queries/route';
 import { memoizedCartRedirectUrl } from './storefront-config';
 import {
-  BigCommerceAddToCartOperation,
-  BigCommerceCart,
-  BigCommerceCartOperation,
-  BigCommerceCategoryTreeItem,
-  BigCommerceCheckoutOperation,
-  BigCommerceCollectionOperation,
-  BigCommerceCollectionsOperation,
-  BigCommerceCreateCartOperation,
-  BigCommerceDeleteCartItemOperation,
-  BigCommerceEntityIdOperation,
-  BigCommerceFeaturedProductsOperation,
-  BigCommerceMenuOperation,
-  BigCommerceNewestProductsOperation,
-  BigCommercePage,
-  BigCommercePageOperation,
-  BigCommercePagesOperation,
-  BigCommerceProduct,
-  BigCommerceProductOperation,
-  BigCommerceProductsCollectionOperation,
-  BigCommerceProductsOperation,
-  BigCommerceRecommendationsOperation,
-  BigCommerceSearchProductsOperation,
-  BigCommerceUpdateCartItemOperation,
-  VercelCart,
-  VercelCollection,
-  VercelMenu,
-  VercelPage,
-  VercelProduct
+    BigCommerceAddToCartOperation,
+    BigCommerceCart,
+    BigCommerceCartOperation,
+    BigCommerceCategoryTreeItem,
+    BigCommerceCheckoutOperation,
+    BigCommerceCollectionOperation,
+    BigCommerceCollectionsOperation,
+    BigCommerceCreateCartOperation,
+    BigCommerceDeleteCartItemOperation,
+    BigCommerceEntityIdOperation,
+    BigCommerceFeaturedProductsOperation,
+    BigCommerceMenuOperation,
+    BigCommerceNewestProductsOperation,
+    BigCommercePage,
+    BigCommercePageOperation,
+    BigCommercePagesOperation,
+    BigCommerceProduct,
+    BigCommerceProductOperation,
+    BigCommerceProductsCollectionOperation,
+    BigCommerceProductsOperation,
+    BigCommerceRecommendationsOperation,
+    BigCommerceSearchProductsOperation,
+    BigCommerceUpdateCartItemOperation,
+    VercelCart,
+    VercelCollection,
+    VercelMenu,
+    VercelPage,
+    VercelProduct
 } from './types';
 
-const channelIdSegment =
-  parseInt(process.env.BIGCOMMERCE_CHANNEL_ID!) !== 1
-    ? `-${process.env.BIGCOMMERCE_CHANNEL_ID}`
-    : '';
-const domain = `https://store-${process.env.BIGCOMMERCE_STORE_HASH!}${channelIdSegment}`;
-const endpoint = `${domain}.${BIGCOMMERCE_GRAPHQL_API_ENDPOINT}`;
+// ---------- Demo mode detection ----------
+const isDemoMode =
+  !process.env.BIGCOMMERCE_STORE_HASH ||
+  !process.env.BIGCOMMERCE_CHANNEL_ID ||
+  !process.env.BIGCOMMERCE_CUSTOMER_IMPERSONATION_TOKEN;
+
+const channelIdSegment = isDemoMode
+  ? ''
+  : parseInt(process.env.BIGCOMMERCE_CHANNEL_ID!) !== 1
+  ? `-${process.env.BIGCOMMERCE_CHANNEL_ID}`
+  : '';
+const domain = isDemoMode
+  ? ''
+  : `https://store-${process.env.BIGCOMMERCE_STORE_HASH!}${channelIdSegment}`;
+const endpoint = isDemoMode ? '' : `${domain}.${BIGCOMMERCE_GRAPHQL_API_ENDPOINT}`;
 
 type ExtractVariables<T> = T extends { variables: object } ? T['variables'] : never;
 
@@ -226,6 +243,7 @@ const getBigCommerceProductsWithCheckout = async (
 };
 
 export async function createCart(): Promise<VercelCart> {
+  if (isDemoMode) return emptyCart;
   // NOTE: on BigCommerce side we can't create cart
   // w/t item params as quantity, productEntityId
   return {
@@ -254,6 +272,7 @@ export async function addToCart(
   cartId: string,
   lines: { merchandiseId: string; quantity: number; productId?: string }[]
 ): Promise<VercelCart> {
+  if (isDemoMode) return emptyCart;
   let bigCommerceCart: BigCommerceCart;
 
   if (cartId) {
@@ -301,7 +320,11 @@ export async function addToCart(
   return bigCommerceToVercelCart(bigCommerceCart, productsByIdList, checkout, checkoutUrl);
 }
 
-export async function removeFromCart(cartId: string, lineIds: string[]): Promise<VercelCart | undefined> {
+export async function removeFromCart(
+  cartId: string,
+  lineIds: string[]
+): Promise<VercelCart | undefined> {
+  if (isDemoMode) return undefined;
   let cartState: { status: number; body: BigCommerceDeleteCartItemOperation };
   const removeCartItem = async (itemId: string) => {
     const res = await bigCommerceFetch<BigCommerceDeleteCartItemOperation>({
@@ -332,7 +355,7 @@ export async function removeFromCart(cartId: string, lineIds: string[]): Promise
 
   const cart = cartState!.body.data.cart.deleteCartLineItem.cart;
 
-  if (cart === null)  {
+  if (cart === null) {
     return undefined;
   }
 
@@ -350,6 +373,7 @@ export async function updateCart(
   cartId: string,
   lines: { id: string; merchandiseId: string; quantity: number; productSlug?: string }[]
 ): Promise<VercelCart> {
+  if (isDemoMode) return emptyCart;
   let cartState: { status: number; body: BigCommerceUpdateCartItemOperation } | undefined;
 
   for (let updates = lines.length; updates > 0; updates--) {
@@ -387,6 +411,7 @@ export async function updateCart(
 }
 
 export async function getCart(cartId: string): Promise<VercelCart | undefined> {
+  if (isDemoMode) return undefined;
   const res = await bigCommerceFetch<BigCommerceCartOperation>({
     query: getCartQuery,
     variables: { entityId: cartId },
@@ -408,6 +433,9 @@ export async function getCart(cartId: string): Promise<VercelCart | undefined> {
 }
 
 export async function getCollection(handle: string): Promise<VercelCollection> {
+  if (isDemoMode) {
+    return demoCollections.find((c) => c.handle === handle) ?? demoCollections[0]!;
+  }
   const entityId = await getCategoryEntityIdbyHandle(handle);
   const res = await bigCommerceFetch<BigCommerceCollectionOperation>({
     query: getCategoryQuery,
@@ -428,6 +456,7 @@ export async function getCollectionProducts({
   reverse?: boolean;
   sortKey?: string;
 }): Promise<VercelProduct[]> {
+  if (isDemoMode) return demoProducts;
   const expectedCollectionBreakpoints: Record<string, string> = {
     'hidden-homepage-carousel': 'carousel_collection',
     'hidden-homepage-featured-items': 'featured_collection'
@@ -489,6 +518,7 @@ export async function getCollectionProducts({
 }
 
 export async function getCollections(): Promise<VercelCollection[]> {
+  if (isDemoMode) return demoCollections;
   const res = await bigCommerceFetch<BigCommerceCollectionsOperation>({
     query: getStoreCategoriesQuery
   });
@@ -509,6 +539,11 @@ export async function getCollections(): Promise<VercelCollection[]> {
 }
 
 export async function getMenu(handle: string): Promise<VercelMenu[]> {
+  if (isDemoMode) {
+    if (handle === 'next-js-frontend-footer-menu') return demoFooterMenu;
+    if (handle === 'next-js-frontend-header-menu') return demoHeaderMenu;
+    return [];
+  }
   const configureMenuPath = (path: string) =>
     path
       .split('/')
@@ -585,6 +620,11 @@ export async function getMenu(handle: string): Promise<VercelMenu[]> {
 }
 
 export async function getPage(handle: string): Promise<VercelPage> {
+  if (isDemoMode) {
+    const page = demoPages.find((p) => p.handle === handle);
+    if (!page) notFound();
+    return page;
+  }
   const entityId = await getEntityIdByHandle(handle);
 
   if (!entityId) {
@@ -602,6 +642,7 @@ export async function getPage(handle: string): Promise<VercelPage> {
 }
 
 export async function getPages(): Promise<VercelPage[]> {
+  if (isDemoMode) return demoPages;
   const res = await bigCommerceFetch<BigCommercePagesOperation>({
     query: getPagesQuery
   });
@@ -612,6 +653,7 @@ export async function getPages(): Promise<VercelPage[]> {
 }
 
 export async function getProduct(handle: string): Promise<VercelProduct | undefined> {
+  if (isDemoMode) return demoProducts.find((p) => p.id === handle);
   const res = await bigCommerceFetch<BigCommerceProductOperation>({
     query: getProductQuery,
     variables: {
@@ -636,6 +678,7 @@ export async function getProductIdBySlug(path: string): Promise<
     }
   | undefined
 > {
+  if (isDemoMode) return undefined;
   const res = await bigCommerceFetch<BigCommerceEntityIdOperation>({
     query: getEntityIdByRouteQuery,
     variables: {
@@ -647,6 +690,7 @@ export async function getProductIdBySlug(path: string): Promise<
 }
 
 export async function getProductRecommendations(productId: string): Promise<VercelProduct[]> {
+  if (isDemoMode) return demoProducts.filter((p) => p.id !== productId).slice(0, 4);
   const res = await bigCommerceFetch<BigCommerceRecommendationsOperation>({
     query: getProductsRecommedationsQuery,
     variables: {
@@ -668,6 +712,13 @@ export async function getProducts({
   reverse?: boolean;
   sortKey?: string;
 }): Promise<VercelProduct[]> {
+  if (isDemoMode) {
+    if (query) {
+      const q = query.toLowerCase();
+      return demoProducts.filter((p) => p.title.toLowerCase().includes(q));
+    }
+    return demoProducts;
+  }
   const sort = vercelToBigCommerceSorting(reverse ?? false, sortKey);
   const res = await bigCommerceFetch<BigCommerceSearchProductsOperation>({
     query: searchProductsQuery,

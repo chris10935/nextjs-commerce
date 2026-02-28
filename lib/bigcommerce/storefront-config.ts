@@ -21,6 +21,17 @@ const createCartRedirectUrl = () => {
   }
 
   return async (cartId: string): Promise<StorefrontCheckoutResponse> => {
+    const missing = ['BIGCOMMERCE_STORE_HASH', 'BIGCOMMERCE_ACCESS_TOKEN'].filter(
+      (key) => !process.env[key]
+    );
+    if (missing.length) {
+      const error = new Error(
+        `Missing required BigCommerce env vars for checkout redirects: ${missing.join(', ')}.`
+      );
+      (error as unknown as { status?: number }).status = 500;
+      throw error;
+    }
+
     if (localCache.activeCartId !== cartId || !localCache.data) {
       const response = await fetch(`${BIGCOMMERCE_API_URL}/stores/${process.env.BIGCOMMERCE_STORE_HASH}/v3/carts/${cartId}/redirect_urls`, {
         method: 'POST',

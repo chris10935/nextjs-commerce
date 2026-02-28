@@ -8,6 +8,9 @@ module.exports = {
     remotePatterns: [
       {
         hostname: process.env.BIGCOMMERCE_CDN_HOSTNAME ?? '*.bigcommerce.com'
+      },
+      {
+        hostname: 'placehold.co'
       }
     ]
   },
