@@ -6,7 +6,8 @@ import { Suspense } from 'react';
 export const runtime = 'edge';
 
 export const metadata = {
-  description: 'High-performance ecommerce store built with Next.js, Vercel, and BigCommerce.',
+  description:
+    'AuraGlow — clean, dermatologist-tested skincare formulated for sensitive skin. Gentle ingredients, visible results.',
   openGraph: {
     type: 'website'
   }

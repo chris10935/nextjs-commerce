@@ -1,268 +1,289 @@
 /**
- * Demo / mock data used when BigCommerce environment variables are not configured.
- * This lets the storefront render a realistic-looking UI without a real backend.
+ * AuraGlow demo data — skincare products for sensitive skin.
+ * Used when BigCommerce environment variables are not configured.
  */
 
 import type { VercelCart, VercelCollection, VercelMenu, VercelPage, VercelProduct } from './types';
 
-const placeholderImage = {
-  url: 'https://placehold.co/800x800/e2e8f0/475569?text=Demo+Product',
-  altText: 'Demo product image',
-  width: 800,
-  height: 800
-};
+/* ------------------------------------------------------------------ */
+/* Helper                                                              */
+/* ------------------------------------------------------------------ */
 
-function makeDemoProduct(
-  overrides: Partial<VercelProduct> & { id: string; title: string }
-): VercelProduct {
-  const handle = `/product/${overrides.id}`;
+function img(bg: string, fg: string, text: string) {
+  const t = encodeURIComponent(text);
   return {
-    id: overrides.id,
+    url: `https://placehold.co/800x800/${bg}/${fg}?text=${t}`,
+    altText: text,
+    width: 800,
+    height: 800
+  };
+}
+
+function makeProduct(o: {
+  id: string;
+  title: string;
+  description: string;
+  price: string;
+  compareAt?: string;
+  bg: string;
+  fg: string;
+  imgText: string;
+  options?: VercelProduct['options'];
+  variants?: VercelProduct['variants'];
+  tags?: string[];
+}): VercelProduct {
+  const handle = `/product/${o.id}`;
+  const image = img(o.bg, o.fg, o.imgText);
+  const minPrice = o.compareAt ?? o.price;
+  return {
+    id: o.id,
     handle,
     availableForSale: true,
-    title: overrides.title,
-    description:
-      overrides.description ??
-      'This is a demo product. Connect your BigCommerce store to see real data.',
-    descriptionHtml:
-      overrides.descriptionHtml ??
-      '<p>This is a demo product. Connect your BigCommerce store to see real data.</p>',
-    options: overrides.options ?? [
-      { id: 'color', name: 'Color', values: ['Black', 'White'] },
-      { id: 'size', name: 'Size', values: ['S', 'M', 'L', 'XL'] }
-    ],
-    priceRange: overrides.priceRange ?? {
-      maxVariantPrice: { amount: '49.99', currencyCode: 'USD' },
-      minVariantPrice: { amount: '29.99', currencyCode: 'USD' }
+    title: o.title,
+    description: o.description,
+    descriptionHtml: `<p>${o.description}</p>`,
+    options: o.options ?? [{ id: 'size', name: 'Size', values: ['30 ml', '50 ml', '100 ml'] }],
+    priceRange: {
+      maxVariantPrice: { amount: o.price, currencyCode: 'USD' },
+      minVariantPrice: { amount: minPrice, currencyCode: 'USD' }
     },
-    variants: overrides.variants ?? [
+    variants: o.variants ?? [
       {
-        id: `${overrides.id}-variant-1`,
-        title: 'Black / S',
+        id: `${o.id}-v1`,
+        title: '30 ml',
         availableForSale: true,
-        selectedOptions: [
-          { name: 'Color', value: 'Black' },
-          { name: 'Size', value: 'S' }
-        ],
-        price: { amount: '29.99', currencyCode: 'USD' }
+        selectedOptions: [{ name: 'Size', value: '30 ml' }],
+        price: { amount: minPrice, currencyCode: 'USD' }
       },
       {
-        id: `${overrides.id}-variant-2`,
-        title: 'White / M',
+        id: `${o.id}-v2`,
+        title: '50 ml',
         availableForSale: true,
-        selectedOptions: [
-          { name: 'Color', value: 'White' },
-          { name: 'Size', value: 'M' }
-        ],
-        price: { amount: '49.99', currencyCode: 'USD' }
+        selectedOptions: [{ name: 'Size', value: '50 ml' }],
+        price: { amount: o.price, currencyCode: 'USD' }
+      },
+      {
+        id: `${o.id}-v3`,
+        title: '100 ml',
+        availableForSale: true,
+        selectedOptions: [{ name: 'Size', value: '100 ml' }],
+        price: { amount: (parseFloat(o.price) * 1.6).toFixed(2), currencyCode: 'USD' }
       }
     ],
-    featuredImage: overrides.featuredImage ?? placeholderImage,
-    images: overrides.images ?? [placeholderImage],
-    seo: overrides.seo ?? { title: overrides.title, description: 'Demo product' },
-    tags: overrides.tags ?? ['demo'],
+    featuredImage: image,
+    images: [image],
+    seo: { title: o.title, description: o.description },
+    tags: o.tags ?? ['sensitive skin', 'skincare'],
     updatedAt: new Date().toISOString()
   };
 }
 
-// ---------------------------------------------------------------------------
-// Products
-// ---------------------------------------------------------------------------
+/* ------------------------------------------------------------------ */
+/* Products                                                            */
+/* ------------------------------------------------------------------ */
 
 export const demoProducts: VercelProduct[] = [
-  makeDemoProduct({
+  makeProduct({
     id: '1',
-    title: 'Classic T-Shirt',
-    priceRange: {
-      maxVariantPrice: { amount: '35.00', currencyCode: 'USD' },
-      minVariantPrice: { amount: '25.00', currencyCode: 'USD' }
-    },
-    featuredImage: {
-      url: 'https://placehold.co/800x800/1e293b/f8fafc?text=Classic+Tee',
-      altText: 'Classic T-Shirt',
-      width: 800,
-      height: 800
-    },
-    images: [
-      {
-        url: 'https://placehold.co/800x800/1e293b/f8fafc?text=Classic+Tee',
-        altText: 'Classic T-Shirt',
-        width: 800,
-        height: 800
-      }
-    ]
+    title: 'Calming Cream Cleanser',
+    description:
+      'A gentle, sulfate-free cream cleanser that dissolves impurities while preserving your skin\u2019s natural moisture barrier. Formulated with oat extract and chamomile for irritation-prone skin.',
+    price: '34.00',
+    compareAt: '28.00',
+    bg: 'fce4ec',
+    fg: '880e4f',
+    imgText: 'Cream+Cleanser',
+    tags: ['cleanser', 'sensitive skin']
   }),
-  makeDemoProduct({
+  makeProduct({
     id: '2',
-    title: 'Lightweight Jacket',
-    priceRange: {
-      maxVariantPrice: { amount: '120.00', currencyCode: 'USD' },
-      minVariantPrice: { amount: '99.00', currencyCode: 'USD' }
-    },
-    featuredImage: {
-      url: 'https://placehold.co/800x800/0f172a/e2e8f0?text=Jacket',
-      altText: 'Lightweight Jacket',
-      width: 800,
-      height: 800
-    },
-    images: [
-      {
-        url: 'https://placehold.co/800x800/0f172a/e2e8f0?text=Jacket',
-        altText: 'Lightweight Jacket',
-        width: 800,
-        height: 800
-      }
-    ]
+    title: 'Hydra-Soothe Serum',
+    description:
+      'A lightweight, fragrance-free serum powered by hyaluronic acid and centella asiatica. Deeply hydrates and calms redness in one step.',
+    price: '52.00',
+    compareAt: '44.00',
+    bg: 'ede7f6',
+    fg: '4a148c',
+    imgText: 'Hydra+Serum',
+    tags: ['serum', 'hydrating', 'sensitive skin']
   }),
-  makeDemoProduct({
+  makeProduct({
     id: '3',
-    title: 'Everyday Hoodie',
-    priceRange: {
-      maxVariantPrice: { amount: '75.00', currencyCode: 'USD' },
-      minVariantPrice: { amount: '65.00', currencyCode: 'USD' }
-    },
-    featuredImage: {
-      url: 'https://placehold.co/800x800/334155/f1f5f9?text=Hoodie',
-      altText: 'Everyday Hoodie',
-      width: 800,
-      height: 800
-    },
-    images: [
-      {
-        url: 'https://placehold.co/800x800/334155/f1f5f9?text=Hoodie',
-        altText: 'Everyday Hoodie',
-        width: 800,
-        height: 800
-      }
-    ]
+    title: 'Barrier Repair Moisturizer',
+    description:
+      'Rich yet non-greasy moisturizer with ceramides, squalane, and aloe vera. Rebuilds the skin barrier overnight and locks in moisture for 72 hours.',
+    price: '46.00',
+    compareAt: '38.00',
+    bg: 'e8f5e9',
+    fg: '1b5e20',
+    imgText: 'Moisturizer',
+    tags: ['moisturizer', 'barrier repair', 'sensitive skin']
   }),
-  makeDemoProduct({
+  makeProduct({
     id: '4',
-    title: 'Running Sneakers',
-    priceRange: {
-      maxVariantPrice: { amount: '150.00', currencyCode: 'USD' },
-      minVariantPrice: { amount: '130.00', currencyCode: 'USD' }
-    },
-    featuredImage: {
-      url: 'https://placehold.co/800x800/475569/f8fafc?text=Sneakers',
-      altText: 'Running Sneakers',
-      width: 800,
-      height: 800
-    },
-    images: [
-      {
-        url: 'https://placehold.co/800x800/475569/f8fafc?text=Sneakers',
-        altText: 'Running Sneakers',
-        width: 800,
-        height: 800
-      }
-    ]
+    title: 'Mineral Sunscreen SPF 50',
+    description:
+      'Zinc-oxide mineral sunscreen with a silky, invisible finish. Broad-spectrum SPF 50 protection without the white cast \u2014 perfect for reactive skin.',
+    price: '38.00',
+    compareAt: '32.00',
+    bg: 'fff8e1',
+    fg: 'e65100',
+    imgText: 'SPF+50',
+    tags: ['sunscreen', 'SPF', 'sensitive skin']
   }),
-  makeDemoProduct({
+  makeProduct({
     id: '5',
-    title: 'Canvas Backpack',
-    priceRange: {
-      maxVariantPrice: { amount: '89.00', currencyCode: 'USD' },
-      minVariantPrice: { amount: '79.00', currencyCode: 'USD' }
-    },
-    featuredImage: {
-      url: 'https://placehold.co/800x800/64748b/f8fafc?text=Backpack',
-      altText: 'Canvas Backpack',
-      width: 800,
-      height: 800
-    },
-    images: [
-      {
-        url: 'https://placehold.co/800x800/64748b/f8fafc?text=Backpack',
-        altText: 'Canvas Backpack',
-        width: 800,
-        height: 800
-      }
-    ]
+    title: 'Redness Relief Toner',
+    description:
+      'Alcohol-free toner infused with niacinamide and green tea to visibly reduce redness and refine pore appearance. Preps skin for serums and moisturizers.',
+    price: '29.00',
+    compareAt: '24.00',
+    bg: 'e0f2f1',
+    fg: '004d40',
+    imgText: 'Toner',
+    tags: ['toner', 'redness relief', 'sensitive skin']
   }),
-  makeDemoProduct({
+  makeProduct({
     id: '6',
-    title: 'Leather Belt',
-    priceRange: {
-      maxVariantPrice: { amount: '45.00', currencyCode: 'USD' },
-      minVariantPrice: { amount: '40.00', currencyCode: 'USD' }
-    },
-    featuredImage: {
-      url: 'https://placehold.co/800x800/94a3b8/1e293b?text=Belt',
-      altText: 'Leather Belt',
-      width: 800,
-      height: 800
-    },
-    images: [
-      {
-        url: 'https://placehold.co/800x800/94a3b8/1e293b?text=Belt',
-        altText: 'Leather Belt',
-        width: 800,
-        height: 800
-      }
-    ]
+    title: 'Gentle Eye Cream',
+    description:
+      'Ultra-gentle eye cream with peptides and caffeine to brighten dark circles and smooth fine lines \u2014 ophthalmologist tested, fragrance-free.',
+    price: '42.00',
+    compareAt: '36.00',
+    bg: 'f3e5f5',
+    fg: '6a1b9a',
+    imgText: 'Eye+Cream',
+    tags: ['eye cream', 'anti-aging', 'sensitive skin']
+  }),
+  makeProduct({
+    id: '7',
+    title: 'Overnight Recovery Mask',
+    description:
+      'A leave-on sleeping mask with bakuchiol and marshmallow root. Wake up to plumper, calmer skin without a trace of irritation.',
+    price: '48.00',
+    compareAt: '40.00',
+    bg: 'fce4ec',
+    fg: 'ad1457',
+    imgText: 'Sleep+Mask',
+    tags: ['mask', 'overnight', 'sensitive skin']
+  }),
+  makeProduct({
+    id: '8',
+    title: 'Micellar Cleansing Water',
+    description:
+      'No-rinse micellar water that gently lifts makeup and impurities in a single swipe. Zero fragrance, zero alcohol \u2014 just clean, calm skin.',
+    price: '22.00',
+    compareAt: '18.00',
+    bg: 'e3f2fd',
+    fg: '0d47a1',
+    imgText: 'Micellar+Water',
+    tags: ['cleanser', 'micellar', 'sensitive skin']
   })
 ];
 
-// ---------------------------------------------------------------------------
-// Menus
-// ---------------------------------------------------------------------------
+/* ------------------------------------------------------------------ */
+/* Menus                                                               */
+/* ------------------------------------------------------------------ */
 
 export const demoHeaderMenu: VercelMenu[] = [
-  { title: 'All', path: '/search' },
-  { title: 'Shirts', path: '/search/shirts' },
-  { title: 'Jackets', path: '/search/jackets' }
+  { title: 'All Products', path: '/search' },
+  { title: 'Cleansers', path: '/search/cleansers' },
+  { title: 'Serums', path: '/search/serums' },
+  { title: 'Moisturizers', path: '/search/moisturizers' }
 ];
 
 export const demoFooterMenu: VercelMenu[] = [
-  { title: 'About', path: '/about' },
-  { title: 'Terms', path: '/terms' },
-  { title: 'Privacy', path: '/privacy' }
+  { title: 'About AuraGlow', path: '/about' },
+  { title: 'Ingredients', path: '/ingredients' },
+  { title: 'Shipping & Returns', path: '/shipping' },
+  { title: 'Privacy Policy', path: '/privacy' }
 ];
 
-// ---------------------------------------------------------------------------
-// Collections
-// ---------------------------------------------------------------------------
+/* ------------------------------------------------------------------ */
+/* Collections                                                         */
+/* ------------------------------------------------------------------ */
 
 export const demoCollections: VercelCollection[] = [
   {
-    handle: 'shirts',
-    title: 'Shirts',
-    description: 'Demo collection of shirts',
-    seo: { title: 'Shirts', description: 'Demo shirts collection' },
+    handle: 'cleansers',
+    title: 'Cleansers',
+    description: 'Gentle, sulfate-free cleansers formulated for sensitive and reactive skin.',
+    seo: { title: 'Cleansers | AuraGlow', description: 'Gentle cleansers for sensitive skin.' },
     updatedAt: new Date().toISOString(),
-    path: '/search/shirts'
+    path: '/search/cleansers'
   },
   {
-    handle: 'jackets',
-    title: 'Jackets',
-    description: 'Demo collection of jackets',
-    seo: { title: 'Jackets', description: 'Demo jackets collection' },
+    handle: 'serums',
+    title: 'Serums',
+    description: 'Targeted treatments that calm, hydrate, and repair \u2014 without irritation.',
+    seo: { title: 'Serums | AuraGlow', description: 'Soothing serums for sensitive skin.' },
     updatedAt: new Date().toISOString(),
-    path: '/search/jackets'
+    path: '/search/serums'
+  },
+  {
+    handle: 'moisturizers',
+    title: 'Moisturizers',
+    description: 'Barrier-boosting moisturizers that keep sensitive skin hydrated and protected.',
+    seo: { title: 'Moisturizers | AuraGlow', description: 'Moisturizers for sensitive skin.' },
+    updatedAt: new Date().toISOString(),
+    path: '/search/moisturizers'
+  },
+  {
+    handle: 'sun-care',
+    title: 'Sun Care',
+    description: 'Mineral-based sun protection designed for the most delicate skin.',
+    seo: { title: 'Sun Care | AuraGlow', description: 'Mineral sunscreens for sensitive skin.' },
+    updatedAt: new Date().toISOString(),
+    path: '/search/sun-care'
   }
 ];
 
-// ---------------------------------------------------------------------------
-// Pages
-// ---------------------------------------------------------------------------
+/* ------------------------------------------------------------------ */
+/* Pages                                                               */
+/* ------------------------------------------------------------------ */
 
 export const demoPages: VercelPage[] = [
   {
     id: '1',
-    title: 'About',
+    title: 'About AuraGlow',
     handle: 'about',
-    body: '<h1>About Us</h1><p>This is a demo page. Connect your BigCommerce store to see real content.</p>',
-    bodySummary: 'About the store',
-    seo: { title: 'About', description: 'About the demo store' },
+    body: `<h1>About AuraGlow</h1>
+<p>AuraGlow was founded on a simple belief: sensitive skin deserves high-performance skincare without compromise. Every formula is dermatologist-tested, fragrance-free, and cruelty-free.</p>
+<p>We source clean, clinically proven ingredients \u2014 like ceramides, centella asiatica, and niacinamide \u2014 to soothe, strengthen, and reveal your skin\u2019s natural glow.</p>`,
+    bodySummary: 'Clean, gentle skincare for sensitive skin.',
+    seo: {
+      title: 'About | AuraGlow',
+      description: 'Learn about AuraGlow \u2014 skincare for sensitive skin.'
+    },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: '2',
+    title: 'Our Ingredients',
+    handle: 'ingredients',
+    body: `<h1>Our Ingredients</h1>
+<p>We never use sulfates, parabens, synthetic fragrance, or harsh alcohols. Instead, every AuraGlow product is built on ingredients your skin will love:</p>
+<ul>
+<li><strong>Ceramides</strong> \u2014 rebuild and protect the skin barrier.</li>
+<li><strong>Centella Asiatica (Cica)</strong> \u2014 calm redness and promote healing.</li>
+<li><strong>Niacinamide</strong> \u2014 reduce pores and even skin tone.</li>
+<li><strong>Hyaluronic Acid</strong> \u2014 deep hydration without heaviness.</li>
+<li><strong>Zinc Oxide</strong> \u2014 gentle, broad-spectrum sun protection.</li>
+</ul>`,
+    bodySummary: 'Clean ingredients your sensitive skin will love.',
+    seo: {
+      title: 'Ingredients | AuraGlow',
+      description: 'What goes into every AuraGlow product.'
+    },
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   }
 ];
 
-// ---------------------------------------------------------------------------
-// Cart (empty)
-// ---------------------------------------------------------------------------
+/* ------------------------------------------------------------------ */
+/* Cart (empty)                                                        */
+/* ------------------------------------------------------------------ */
 
 export const emptyCart: VercelCart = {
   id: '',
