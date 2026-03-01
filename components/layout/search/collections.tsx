@@ -6,7 +6,10 @@ import FilterList from './filter';
 
 async function CollectionList() {
   const collections = await getCollections();
-  return <FilterList list={collections} title="Collections" />;
+  // Add "All Products" at the top and filter out the default Shopify "frontpage" collection
+  const filtered = collections.filter((c) => c.handle !== 'frontpage');
+  const allProducts = { title: 'All Products', path: '/search' };
+  return <FilterList list={[allProducts, ...filtered]} title="Collections" />;
 }
 
 const skeleton = 'mb-3 h-4 w-5/6 animate-pulse rounded';

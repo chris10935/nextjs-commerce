@@ -2,17 +2,15 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 
-import { GridTileImage } from 'components/grid/tile';
+import ProductCard from 'components/home/product-card';
 import Footer from 'components/layout/footer';
-import Price from 'components/price';
 import { Gallery } from 'components/product/gallery';
 import { ProductDescription } from 'components/product/product-description';
 import { ProductTabs } from 'components/product/product-tabs';
-import { getProduct, getProductRecommendations } from 'lib/bigcommerce';
+import { getProduct, getProductRecommendations, getProducts } from 'lib/bigcommerce';
 import { getProductExtras } from 'lib/bigcommerce/product-extras';
 import { Image } from 'lib/bigcommerce/types';
 import { HIDDEN_PRODUCT_TAG } from 'lib/constants';
-import Link from 'next/link';
 
 export const runtime = 'edge';
 
@@ -102,9 +100,9 @@ export default async function ProductPage({ params }: { params: { handle: string
           </div>
         </div>
 
-        {/* Recommended With */}
+        {/* Related Products */}
         <Suspense>
-          <RelatedProducts id={product.id} />
+          <RelatedProducts id={product.id} handle={product.handle} />
         </Suspense>
       </div>
 
@@ -128,53 +126,30 @@ export default async function ProductPage({ params }: { params: { handle: string
   );
 }
 
-async function RelatedProducts({ id }: { id: string }) {
-  const relatedProducts = await getProductRecommendations(id);
+async function RelatedProducts({ id, handle }: { id: string; handle: string }) {
+  // Try Shopify recommendations first, fall back to all products
+  let relatedProducts = await getProductRecommendations(id);
+
+  if (!relatedProducts.length) {
+    const allProducts = await getProducts({});
+    // Exclude the current product
+    relatedProducts = allProducts.filter((p) => p.handle !== handle);
+  }
 
   if (!relatedProducts.length) return null;
 
   return (
     <div className="py-10">
-      <h2 className="mb-6 text-xl font-bold uppercase tracking-wide text-neutral-800">
-        Recommended With
-      </h2>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {relatedProducts.slice(0, 4).map((product) => {
-          const hoverImageUrl =
-            product.images?.find((image) => image.url && image.url !== product.featuredImage?.url)
-              ?.url ?? undefined;
-
-          return (
-            <Link
-              key={product.handle}
-              href={`${product.handle}`}
-              className="group flex items-center gap-4 rounded-lg border border-neutral-200 bg-white p-4 transition-shadow hover:shadow-md"
-            >
-              <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-md bg-neutral-50">
-                <GridTileImage
-                  alt={product.title}
-                  src={product.featuredImage?.url}
-                  hoverSrc={hoverImageUrl}
-                  fill
-                  sizes="80px"
-                />
-              </div>
-              <div className="flex flex-col gap-1 overflow-hidden">
-                <p className="truncate text-sm font-semibold text-neutral-800 group-hover:text-rose-600">
-                  {product.title}
-                </p>
-                <p className="truncate text-xs text-neutral-500">
-                  {product.description?.slice(0, 60)}…
-                </p>
-                <Price
-                  className="text-sm font-bold text-neutral-900"
-                  amount={product.priceRange.maxVariantPrice.amount}
-                  currencyCode={product.priceRange.maxVariantPrice.currencyCode}
-                />
-              </div>
-            </Link>
-          );
-        })}
+      <div className="mb-6 flex items-center gap-3">
+        <div className="h-8 w-1 rounded-full bg-rose-500" />
+        <h2 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-white">
+          You May Also Like
+        </h2>
+      </div>
+      <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
+        {relatedProducts.slice(0, 4).map((product) => (
+          <ProductCard key={product.handle} product={product} />
+        ))}
       </div>
     </div>
   );

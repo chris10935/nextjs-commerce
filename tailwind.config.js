@@ -17,6 +17,10 @@ module.exports = {
           '0%': { transform: 'translateX(0%)' },
           '100%': { transform: 'translateX(-100%)' }
         },
+        scroll: {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' }
+        },
         blink: {
           '0%': { opacity: 0.2 },
           '20%': { opacity: 1 },
@@ -26,6 +30,7 @@ module.exports = {
       animation: {
         fadeIn: 'fadeIn .3s ease-in-out',
         carousel: 'marquee 60s linear infinite',
+        scroll: 'scroll 30s linear infinite',
         blink: 'blink 1.4s both infinite'
       }
     }

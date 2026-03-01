@@ -2,8 +2,7 @@ import { getCollection, getCollectionProducts } from 'lib/bigcommerce';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
-import Grid from 'components/grid';
-import ProductGridItems from 'components/layout/product-grid-items';
+import ProductCard from 'components/home/product-card';
 import { defaultSort, sorting } from 'lib/constants';
 
 export const runtime = 'edge';
@@ -40,9 +39,11 @@ export default async function CategoryPage({
       {products.length === 0 ? (
         <p className="py-3 text-lg">{`No products found in this collection`}</p>
       ) : (
-        <Grid className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          <ProductGridItems products={products} />
-        </Grid>
+        <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3">
+          {products.map((product) => (
+            <ProductCard key={product.handle} product={product} />
+          ))}
+        </div>
       )}
     </section>
   );
