@@ -12,6 +12,10 @@ function ThreeItemGridItem({
   size: 'full' | 'half';
   priority?: boolean;
 }) {
+  const hoverImageUrl =
+    item.images?.find((image) => image.url && image.url !== item.featuredImage?.url)?.url ??
+    undefined;
+
   return (
     <div
       className={size === 'full' ? 'md:col-span-4 md:row-span-2' : 'md:col-span-2 md:row-span-1'}
@@ -19,12 +23,13 @@ function ThreeItemGridItem({
       <Link className="relative block aspect-square h-full w-full" href={`${item.handle}`}>
         <GridTileImage
           src={item.featuredImage.url}
+          alt={item.title}
+          hoverSrc={hoverImageUrl}
           fill
           sizes={
             size === 'full' ? '(min-width: 768px) 66vw, 100vw' : '(min-width: 768px) 33vw, 100vw'
           }
           priority={priority}
-          alt={item.title}
           label={{
             position: size === 'full' ? 'center' : 'bottom',
             title: item.title as string,

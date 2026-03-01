@@ -7,10 +7,19 @@ module.exports = {
   images: {
     remotePatterns: [
       {
+        hostname: 'cdn.shopify.com'
+      },
+      {
         hostname: process.env.BIGCOMMERCE_CDN_HOSTNAME ?? '*.bigcommerce.com'
       },
       {
         hostname: 'placehold.co'
+      },
+      {
+        hostname: 'www.skin1004.com'
+      },
+      {
+        hostname: 'images.unsplash.com'
       }
     ]
   },

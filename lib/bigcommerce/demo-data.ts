@@ -28,12 +28,34 @@ function makeProduct(o: {
   bg: string;
   fg: string;
   imgText: string;
+  /** Single image URL shorthand (used as first image if `imageUrls` is not set) */
+  imageUrl?: string;
+  /** Multiple image URLs — first one becomes the featured image */
+  imageUrls?: string[];
   options?: VercelProduct['options'];
   variants?: VercelProduct['variants'];
   tags?: string[];
 }): VercelProduct {
   const handle = `/product/${o.id}`;
-  const image = img(o.bg, o.fg, o.imgText);
+
+  // Build the images array: prefer imageUrls (multi), fall back to imageUrl (single), then placeholder
+  const placeholder = img(o.bg, o.fg, o.imgText);
+  let productImages: { url: string; altText: string; width: number; height: number }[];
+
+  if (o.imageUrls && o.imageUrls.length > 0) {
+    productImages = o.imageUrls.map((url, i) => ({
+      url,
+      altText: i === 0 ? o.title : `${o.title} — image ${i + 1}`,
+      width: 800,
+      height: 800
+    }));
+  } else if (o.imageUrl) {
+    productImages = [{ url: o.imageUrl, altText: o.title, width: 800, height: 800 }];
+  } else {
+    productImages = [placeholder];
+  }
+
+  const featuredImage = productImages[0]!;
   const minPrice = o.compareAt ?? o.price;
   return {
     id: o.id,
@@ -50,6 +72,7 @@ function makeProduct(o: {
     variants: o.variants ?? [
       {
         id: `${o.id}-v1`,
+        parentId: o.id,
         title: '30 ml',
         availableForSale: true,
         selectedOptions: [{ name: 'Size', value: '30 ml' }],
@@ -57,6 +80,7 @@ function makeProduct(o: {
       },
       {
         id: `${o.id}-v2`,
+        parentId: o.id,
         title: '50 ml',
         availableForSale: true,
         selectedOptions: [{ name: 'Size', value: '50 ml' }],
@@ -64,14 +88,15 @@ function makeProduct(o: {
       },
       {
         id: `${o.id}-v3`,
+        parentId: o.id,
         title: '100 ml',
         availableForSale: true,
         selectedOptions: [{ name: 'Size', value: '100 ml' }],
         price: { amount: (parseFloat(o.price) * 1.6).toFixed(2), currencyCode: 'USD' }
       }
     ],
-    featuredImage: image,
-    images: [image],
+    featuredImage,
+    images: productImages,
     seo: { title: o.title, description: o.description },
     tags: o.tags ?? ['sensitive skin', 'skincare'],
     updatedAt: new Date().toISOString()
@@ -85,15 +110,22 @@ function makeProduct(o: {
 export const demoProducts: VercelProduct[] = [
   makeProduct({
     id: '1',
-    title: 'Calming Cream Cleanser',
+    title: ' Hyalu-Cica Water-Fit Sun Serum UV 50ml',
     description:
-      'A gentle, sulfate-free cream cleanser that dissolves impurities while preserving your skin\u2019s natural moisture barrier. Formulated with oat extract and chamomile for irritation-prone skin.',
+      'A lightweight serum-like sunscreen that hydrates and soothes the skin for a fresh, no white cast finish. Reformulated with Panthenol and extracts of rice, oat, and soybean to help maintain hydration and comfort.',
     price: '34.00',
     compareAt: '28.00',
     bg: 'fce4ec',
     fg: '880e4f',
     imgText: 'Cream+Cleanser',
-    tags: ['cleanser', 'sensitive skin']
+    tags: ['serum', 'sensitive skin'],
+    imageUrls: [
+      'https://www.skin1004.com/cdn/shop/files/skin1004-50ml-hyalu-cica-water-fit-sun-serum-uv-1204112543_1440x.png?v=1762764544',
+      'https://www.skin1004.com/cdn/shop/files/skin1004-50ml-hyalu-cica-water-fit-sun-serum-uv-1204822257_1440x.jpg?v=1763095744',
+      'https://www.skin1004.com/cdn/shop/files/skin1004-50ml-hyalu-cica-water-fit-sun-serum-uv-1204112540_1440x.png?v=1763091245',
+      'https://www.skin1004.com/cdn/shop/files/skin1004-50ml-hyalu-cica-water-fit-sun-serum-uv-1204112541_1440x.png?v=1763091245',
+      'https://www.skin1004.com/cdn/shop/files/skin1004-50ml-hyalu-cica-water-fit-sun-serum-uv-1204112542_1440x.png?v=17630912455'
+    ]
   }),
   makeProduct({
     id: '2',
